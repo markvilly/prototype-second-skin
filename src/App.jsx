@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { generateEcoState } from "./utils/ecoState";
 import { useSoundEngine } from "./hooks/useSoundEngine";
 import Particles from "./components/Particles";
+import HeartbeatPulse from "./components/HeartbeatPulse";
 import XRayPanel from "./components/XRayPanel";
 import Controls from "./components/Controls";
 
@@ -12,7 +13,7 @@ export default function App() {
   const [muted, setMuted] = useState(true);
   const [xray, setXray] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
-  const { initAudio } = useSoundEngine(eco, muted);
+  const { initAudio, bpm } = useSoundEngine(eco, muted);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,6 +94,7 @@ export default function App() {
       />
 
       <Particles eco={eco} />
+      <HeartbeatPulse bpm={bpm} stressIndex={eco.stressIndex} />
 
       {/* Main content layer */}
       <div
@@ -153,7 +155,20 @@ export default function App() {
 
           <div
             style={{
-              marginTop: "3rem",
+              marginTop: "2rem",
+              fontSize: "0.65rem",
+              fontFamily: "'Courier New', monospace",
+              letterSpacing: "0.1em",
+              color: `hsla(${hue}, 20%, 55%, 0.3)`,
+              transition: "all 3s ease",
+            }}
+          >
+            {bpm} bpm
+          </div>
+
+          <div
+            style={{
+              marginTop: "1rem",
               fontSize: "0.7rem",
               letterSpacing: "0.2em",
               textTransform: "uppercase",
@@ -167,7 +182,7 @@ export default function App() {
 
         {/* X-Ray mode: reveals the data */}
         {xray && (
-          <XRayPanel eco={eco} hue={hue} stressLabel={stressLabel} />
+          <XRayPanel eco={eco} hue={hue} stressLabel={stressLabel} bpm={bpm} />
         )}
       </div>
 

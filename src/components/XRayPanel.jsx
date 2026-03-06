@@ -1,32 +1,43 @@
 // --- X-RAY DATA PANEL ---
-function XRayPanel({ eco, hue, stressLabel }) {
+function XRayPanel({ eco, hue, stressLabel, bpm }) {
   const metrics = [
     {
       label: "water temp",
       value: eco.waterTemp,
       unit: `${(4 + eco.waterTemp * 20).toFixed(1)}°C`,
+      barColor: null,
     },
     {
       label: "anomaly",
       value: eco.tempAnomaly,
       unit: `${(eco.tempAnomaly * 5).toFixed(1)}°`,
+      barColor: null,
     },
     {
       label: "current",
       value: eco.currentSpeed,
       unit: `${(eco.currentSpeed * 0.8).toFixed(2)} m/s`,
+      barColor: null,
     },
     {
       label: "algae",
       value: eco.algaeLevel,
       unit: `${(eco.algaeLevel * 30).toFixed(1)} µg/L`,
+      barColor: null,
     },
     {
       label: "wind",
       value: eco.windSpeed,
       unit: `${(eco.windSpeed * 40).toFixed(0)} km/h`,
+      barColor: null,
     },
-    { label: "stress", value: eco.stressIndex, unit: stressLabel },
+    { label: "stress", value: eco.stressIndex, unit: stressLabel, barColor: null },
+    {
+      label: "pulse",
+      value: (bpm - 36) / 94, // normalise 36–130 bpm → 0–1
+      unit: `${bpm} bpm`,
+      barColor: `hsla(5, 70%, 55%, 0.8)`,
+    },
   ];
 
   return (
@@ -40,7 +51,7 @@ function XRayPanel({ eco, hue, stressLabel }) {
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
         gap: "0.75rem",
-        maxWidth: "700px",
+        maxWidth: "800px",
         margin: "0 auto",
       }}
     >
@@ -60,7 +71,9 @@ function XRayPanel({ eco, hue, stressLabel }) {
               fontSize: "0.55rem",
               letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: `hsla(${hue}, 20%, 60%, 0.6)`,
+              color: d.label === "pulse"
+                ? "hsla(5, 60%, 65%, 0.7)"
+                : `hsla(${hue}, 20%, 60%, 0.6)`,
               marginBottom: "0.3rem",
             }}
           >
@@ -71,7 +84,9 @@ function XRayPanel({ eco, hue, stressLabel }) {
               style={{
                 fontSize: "1.1rem",
                 fontWeight: 300,
-                color: `hsla(${hue + 20}, 30%, 70%, 0.9)`,
+                color: d.label === "pulse"
+                  ? "hsla(5, 50%, 72%, 0.9)"
+                  : `hsla(${hue + 20}, 30%, 70%, 0.9)`,
                 fontFamily: "'Courier New', monospace",
               }}
             >
@@ -91,7 +106,7 @@ function XRayPanel({ eco, hue, stressLabel }) {
               style={{
                 height: "100%",
                 width: `${d.value * 100}%`,
-                background: `hsla(${hue + 20}, 40%, 55%, 0.7)`,
+                background: d.barColor || `hsla(${hue + 20}, 40%, 55%, 0.7)`,
                 borderRadius: "1px",
                 transition: "width 3s ease",
               }}

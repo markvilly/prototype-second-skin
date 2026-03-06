@@ -1,10 +1,90 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
+
+// --- HEARTBEAT SYNTHESIZER ---
+function createHeartbeat(ctx, master) {
+  // Low-pass filter for chest-feel muffled thump
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 80;
+  filter.Q.value = 8;
+
+  const heartGain = ctx.createGain();
+  heartGain.gain.value = 0.15;
+
+  filter.connect(heartGain);
+  heartGain.connect(master);
+
+  let timeoutId = null;
+  let currentBPM = 40;
+  let running = false;
+
+  function playThump(startFreq, endFreq, gainPeak, delayMs) {
+    const t = ctx.currentTime + delayMs / 1000;
+
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(startFreq, t);
+    osc.frequency.linearRampToValueAtTime(endFreq, t + 0.12);
+
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(gainPeak, t + 0.01);
+    env.gain.exponentialDecayToValueAtTime =
+      env.gain.exponentialRampToValueAtTime;
+    env.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+
+    osc.connect(env);
+    env.connect(filter);
+
+    osc.start(t);
+    osc.stop(t + 0.2);
+  }
+
+  function beat() {
+    if (!running) return;
+    // LUB: 55Hz → 35Hz, gain 1.0, immediate
+    playThump(55, 35, 1.0, 0);
+    // DUB: 65Hz → 40Hz, gain 0.6, delayed 120ms
+    playThump(65, 40, 0.6, 120);
+
+    const jitter = currentBPM > 80 ? (Math.random() - 0.5) * 120 : 0;
+    const interval = 60000 / (currentBPM + jitter);
+    timeoutId = setTimeout(beat, interval);
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    beat();
+  }
+
+  function stop() {
+    running = false;
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+
+  function updateBPM(stressIndex, now) {
+    currentBPM = 36 + stressIndex * 94;
+    heartGain.gain.linearRampToValueAtTime(
+      0.15 + stressIndex * 0.55,
+      now + 2
+    );
+    filter.frequency.linearRampToValueAtTime(
+      80 + stressIndex * 200,
+      now + 2
+    );
+  }
+
+  return { start, stop, updateBPM, getCurrentBPM: () => currentBPM };
+}
 
 // --- SOUND ENGINE ---
 export function useSoundEngine(eco, muted) {
   const ctxRef = useRef(null);
   const nodesRef = useRef({});
   const startedRef = useRef(false);
+  const heartbeatRef = useRef(null);
+  const [bpm, setBpm] = useState(40);
 
   const initAudio = useCallback(() => {
     if (startedRef.current) return;
@@ -52,6 +132,11 @@ export function useSoundEngine(eco, muted) {
       noise.connect(noiseFilter).connect(noiseGain).connect(master);
       noise.start();
 
+      // Heartbeat synthesizer
+      const heartbeat = createHeartbeat(ctx, master);
+      heartbeat.start();
+      heartbeatRef.current = heartbeat;
+
       ctxRef.current = ctx;
       nodesRef.current = {
         master,
@@ -97,6 +182,12 @@ export function useSoundEngine(eco, muted) {
       0.05 + eco.stressIndex * 0.25,
       now + 2
     );
+
+    // Update heartbeat BPM
+    if (heartbeatRef.current) {
+      heartbeatRef.current.updateBPM(eco.stressIndex, now);
+      setBpm(Math.round(heartbeatRef.current.getCurrentBPM()));
+    }
   }, [eco]);
 
   useEffect(() => {
@@ -108,5 +199,8 @@ export function useSoundEngine(eco, muted) {
     );
   }, [muted]);
 
-  return { initAudio };
+  // Also expose bpm derived from eco even when audio isn't started
+  const derivedBpm = Math.round(36 + eco.stressIndex * 94);
+
+  return { initAudio, bpm: startedRef.current ? bpm : derivedBpm };
 }
