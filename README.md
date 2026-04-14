@@ -1,3 +1,20 @@
+# Second Skin
+
+## Getting Started
+
+```bash
+npm install    # install dependencies (first time only)
+npm run dev    # start the dev server
+```
+
+Then open `http://localhost:5173` in your browser.
+
+Other useful commands:
+- `npm run build` — production build
+- `npm run preview` — preview the production build locally
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
