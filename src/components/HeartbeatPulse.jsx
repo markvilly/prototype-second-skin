@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
 
 // --- HEARTBEAT PULSE RING ---
-function HeartbeatPulse({ bpm, stressIndex }) {
+// beatCount increments once per beat in the sound engine — we react to it
+// so the visual pulse is locked in time with the actual audio thump.
+function HeartbeatPulse({ beatCount, stressIndex }) {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPulse(true);
-      // Snap to expanded, then exhale back
-      setTimeout(() => setPulse(false), 180);
-    }, 60000 / bpm);
-
-    return () => clearInterval(interval);
-  }, [bpm]);
+    if (beatCount === 0) return; // don't fire on mount before audio starts
+    setPulse(true);
+    const t = setTimeout(() => setPulse(false), 180);
+    return () => clearTimeout(t);
+  }, [beatCount]);
 
   // Stress-driven color: calm blue-grey → warm amber → distressed red
   const ringColor =

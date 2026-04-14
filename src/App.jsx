@@ -13,7 +13,7 @@ export default function App() {
   const [muted, setMuted] = useState(true);
   const [xray, setXray] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
-  const { initAudio, bpm } = useSoundEngine(eco, muted);
+  const { initAudio, bpm, rawBpm, beatCount } = useSoundEngine(eco, muted);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -94,7 +94,7 @@ export default function App() {
       />
 
       <Particles eco={eco} />
-      <HeartbeatPulse bpm={bpm} stressIndex={eco.stressIndex} />
+      <HeartbeatPulse beatCount={beatCount} stressIndex={eco.stressIndex} />
 
       {/* Main content layer */}
       <div
@@ -163,7 +163,7 @@ export default function App() {
               transition: "all 3s ease",
             }}
           >
-            {bpm} bpm
+            {bpm} bpm avg
           </div>
 
           <div
@@ -182,7 +182,7 @@ export default function App() {
 
         {/* X-Ray mode: reveals the data */}
         {xray && (
-          <XRayPanel eco={eco} hue={hue} stressLabel={stressLabel} bpm={bpm} />
+          <XRayPanel eco={eco} hue={hue} stressLabel={stressLabel} bpm={bpm} rawBpm={rawBpm} />
         )}
       </div>
 

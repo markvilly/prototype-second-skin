@@ -1,5 +1,5 @@
 // --- X-RAY DATA PANEL ---
-function XRayPanel({ eco, hue, stressLabel, bpm }) {
+function XRayPanel({ eco, hue, stressLabel, bpm, rawBpm }) {
   const metrics = [
     {
       label: "water temp",
@@ -33,9 +33,10 @@ function XRayPanel({ eco, hue, stressLabel, bpm }) {
     },
     { label: "stress", value: eco.stressIndex, unit: stressLabel, barColor: null },
     {
-      label: "pulse",
+      label: "pulse (avg)",
       value: (bpm - 36) / 94, // normalise 36–130 bpm → 0–1
       unit: `${bpm} bpm`,
+      sub: `raw ${rawBpm} bpm`,
       barColor: `hsla(5, 70%, 55%, 0.8)`,
     },
   ];
@@ -84,7 +85,7 @@ function XRayPanel({ eco, hue, stressLabel, bpm }) {
               style={{
                 fontSize: "1.1rem",
                 fontWeight: 300,
-                color: d.label === "pulse"
+                color: d.label === "pulse (avg)"
                   ? "hsla(5, 50%, 72%, 0.9)"
                   : `hsla(${hue + 20}, 30%, 70%, 0.9)`,
                 fontFamily: "'Courier New', monospace",
@@ -93,6 +94,19 @@ function XRayPanel({ eco, hue, stressLabel, bpm }) {
               {d.unit}
             </div>
           </div>
+          {d.sub && (
+            <div
+              style={{
+                fontSize: "0.55rem",
+                letterSpacing: "0.1em",
+                color: "hsla(5, 40%, 55%, 0.5)",
+                marginTop: "0.15rem",
+                fontFamily: "'Courier New', monospace",
+              }}
+            >
+              {d.sub}
+            </div>
+          )}
           <div
             style={{
               marginTop: "0.4rem",
